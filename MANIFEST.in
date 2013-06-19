@@ -1,0 +1,2 @@
+include AUTHORS
+recursive-include cmsplugin_contact_extensible/templates *

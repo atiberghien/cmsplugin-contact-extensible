@@ -1,0 +1,4 @@
+{% for name, value in data.extra_fields.iteritems %}
+{{name}} : {{value}}
+{% endfor %}
+{{ data.content }}

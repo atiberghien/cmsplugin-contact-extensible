@@ -1,0 +1,129 @@
+{% extends "admin/cms/page/plugin_change_form.html" %}
+
+{% block extrahead %}{{ block.super }}
+<script type="text/javascript">
+//<![CDATA[
+(function($) {
+	function updateVisibility(class_prefix) {
+		$('div.spam_protection_method').parent().children('.form-row').each(function(index, row) {
+			var visible = false;
+			$.each($(row).attr('class').split(/\s+/), function(index, klass) {
+				if (klass == 'spam_protection_method' || (klass.indexOf(class_prefix) >= 0
+					{% if recaptcha_settings %} && klass.indexOf("recaptcha_public_key") < 0 && klass.indexOf("recaptcha_private_key") < 0{% endif %}
+					{% if akismet_settings %} && klass.indexOf("akismet_api_key") < 0{% endif %})) {
+					visible = true;
+				}
+			});
+			if (visible) {
+				$(row).css('display', 'block');
+			} else {
+				$(row).css('display', 'none');
+			}
+		});
+	}
+	
+	
+	
+	$(document).ready(function(){
+		function addAnotherExtraField(container, num){
+            container.append($('<div>\
+                    <label for="extra_field_'+ num +'">Nom du champs '+ num +'</label>\
+                    <input id="extra_field_'+ num +'" type="text" />\
+                    <a class="add-another" href="#"">+</a>\
+                    <a class="del-current" href="#"">-</a>\
+                    </div>'));
+            $('input[name=extra_field_count]').val(num);
+            
+            if(num==1){
+            	container.find('a.del-current').css('display', 'none');
+            }
+            
+            container.find('a.add-another:last').click(function(){
+            	 var count = parseInt($('input[name=extra_field_count]').val()) + 1;
+            	 container.find('a').css('display', 'none');
+            	 addAnotherExtraField(container, count);
+            	 return false;
+            });
+            container.find('a.del-current:last').click(function(){
+            	var count = parseInt($('input[name=extra_field_count]').val()) - 1;
+            	$(this).parents('div:first').remove();
+            	container.find('a.add-another:last').css('display', '');
+            	if(count>1){
+            		container.find('a.del-current:last').css('display', '');
+            	}
+            	$('input[name=extra_field_count]').val(count);
+            	return false;
+            });
+		}
+		
+		$('#id_spam_protection_method').change(function() {
+			var curOption = $('#id_spam_protection_method :selected');
+			updateVisibility(curOption.html().toLowerCase());
+		});
+		
+		var prev_extra_field_values = $('#id_extra_fields').html();
+
+		$('label[for=id_extra_fields]').css('visibility', 'hidden').css('display', 'none');
+		$('#id_extra_fields').css('visibility', 'hidden').css('display', 'none');
+		
+		if(prev_extra_field_values !== ""){
+			var prev_extra_fields = prev_extra_field_values.split(',');
+    		for(var i=0; i<prev_extra_fields.length; i++) {
+    			$('label[for=id_extra_fields]').parent('div').append($('<div>\
+    					<label>Nom du champs '+(i+1)+'</label>\
+    					<input id="extra_field_'+(i+1)+'" type="text" value="'+prev_extra_fields[i]+'"/>\
+    					</div>'));
+    		}
+		}
+		else {
+			var container = $('label[for=id_extra_fields]').parent('div')
+			container.append($('<input name="extra_field_count" type="hidden" value="0"/>'));
+			
+			addAnotherExtraField(container, 1);
+			
+		}
+
+		$('form').submit(function(){
+			var extra_fields = new Array();
+			$('input[id^=extra_field_]').each(function(){
+				extra_fields.push($(this).val());
+	        });
+			$('#id_extra_fields').html(extra_fields.toString())
+		});
+		
+	});
+})(jQuery);
+//]]>
+</script>
+
+{% endblock extrahead %}
+
+{% block extrastyle %}{{ block.super }}
+<style type="text/css">
+	div.form-row label {
+		width: 14em;
+	}
+	form .aligned p.help {
+		padding-left: 48px;
+		margin-left: 13em;
+	}
+	
+	{% if spam_protection_method != 1 or akismet_settings %}
+	div.form-row.akismet_api_key {
+		display: none;
+	}
+	{% endif %}
+
+	{% if spam_protection_method != 2 or recaptcha_settings %}
+	div.form-row.recaptcha_public_key {
+		display: none;
+	}
+	div.form-row.recaptcha_private_key {
+		display: none;
+	}
+	div.form-row.recaptcha_theme {
+		display: none;
+	}
+	{% endif %}
+</style>
+{% endblock extrastyle %}
