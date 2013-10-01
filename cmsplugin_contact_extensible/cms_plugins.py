@@ -40,6 +40,13 @@ class CustomContactPlugin(ContactPlugin):
         })
     )
     
+    def get_editor_widget(self, request, plugins):
+        try:
+            from djangocms_text_ckeditor.widgets import TextEditorWidget
+            return TextEditorWidget(installed_plugins=plugins)
+        except:
+            return ContactPlugin.get_editor_widget(self, request, plugins)
+        
     def create_form(self, instance, request):
         form = ContactPlugin.create_form(self, instance, request)
         for field_name in instance.extra_fields.split(','):
